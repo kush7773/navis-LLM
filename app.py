@@ -192,12 +192,15 @@ def reset_chat():
     conversation_history = []
     return jsonify({'success': True})
 
+# ── Initialize on import (works with both dev server and gunicorn) ──
+if not os.path.exists(TRAINING_DATA_FILE):
+    save_training_data({"qa_pairs": []})
+
+init_groq()
+
 # ── Main ───────────────────────────────────────────────────────
 if __name__ == '__main__':
-    if not os.path.exists(TRAINING_DATA_FILE):
-        save_training_data({"qa_pairs": []})
-
-    groq_ok = init_groq()
+    groq_ok = client is not None
     print("\n🤖  Navis AI Assistant")
     print(f"   AI Engine: {'✅ Groq (' + MODEL + ')' if groq_ok else '❌ No key — set GROQ_API_KEY in .env'}")
     print(f"   Training Data: {TRAINING_DATA_FILE}")
