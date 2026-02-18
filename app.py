@@ -136,6 +136,10 @@ def find_matching_qa(question):
 def index():
     return render_template('index.html')
 
+@app.route('/health')
+def health():
+    return jsonify({'status': 'ok', 'model': MODEL, 'groq': client is not None})
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.json
@@ -193,16 +197,19 @@ def reset_chat():
     return jsonify({'success': True})
 
 # ── Initialize on import (works with both dev server and gunicorn) ──
-if not os.path.exists(TRAINING_DATA_FILE):
-    save_training_data({"qa_pairs": []})
-
-init_groq()
+try:
+    if not os.path.exists(TRAINING_DATA_FILE):
+        save_training_data({"qa_pairs": []})
+    init_groq()
+except Exception as e:
+    print(f"⚠️  Init warning: {e}")
 
 # ── Main ───────────────────────────────────────────────────────
 if __name__ == '__main__':
     groq_ok = client is not None
+    port = int(os.environ.get('PORT', 5001))
     print("\n🤖  Navis AI Assistant")
     print(f"   AI Engine: {'✅ Groq (' + MODEL + ')' if groq_ok else '❌ No key — set GROQ_API_KEY in .env'}")
     print(f"   Training Data: {TRAINING_DATA_FILE}")
-    print(f"   🌐 Open: http://localhost:5001\n")
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    print(f"   🌐 Open: http://localhost:{port}\n")
+    app.run(debug=True, host='0.0.0.0', port=port)
