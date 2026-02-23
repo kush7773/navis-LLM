@@ -133,11 +133,12 @@ class NavisApp {
                 utt.rate = 0.95;
                 utt.pitch = 1;
 
-                // Cross-platform voice selection: prioritize natural voices
+                // Cross-platform voice selection: prioritize male voices
                 const voices = this.voices || window.speechSynthesis.getVoices();
-                const preferred = voices.find(v => v.name.includes('Google') && v.lang.startsWith('en'))
-                        || voices.find(v => v.name.includes('Samantha'))         // macOS
-                        || voices.find(v => v.name.includes('Microsoft') && v.lang.startsWith('en'))  // Windows
+                const preferred = voices.find(v => v.name.includes('Google') && v.name.includes('Male') && v.lang.startsWith('en'))
+                        || voices.find(v => v.name.includes('Alex'))             // macOS US Male
+                        || voices.find(v => v.name.includes('Daniel'))           // macOS UK Male
+                        || voices.find(v => v.name.includes('David'))            // Windows US Male
                         || voices.find(v => v.lang.startsWith('en'));
                 if (preferred) utt.voice = preferred;
 
