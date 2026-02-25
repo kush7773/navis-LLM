@@ -150,15 +150,15 @@ class NavisApp {
 
                 let preferred;
                 if (isHindi) {
-                        // For Hindi, specifically grab "Google हिन्दी" (which is male-sounding) or any non-female Hindi voice
+                        // Force a male Hindi voice. If a specific male Hindi voice isn't available, force Rishi to read Hindi text.
                         preferred = voices.find(v => v.name === 'Google हिन्दी')
-                                || voices.find(v => v.lang.startsWith('hi') && !isFemale(v))
+                                || voices.find(v => v.lang.startsWith('hi') && !isFemale(v) && v.name.includes('Male'))
+                                || voices.find(v => v.name === 'Rishi') // Fallback to Rishi for a male Indian accent if all Hindi voices are female
                                 || voices[0];
                 } else if (isKannada) {
-                        // No default male Kannada voice found in the user's list (Soumya is female).
-                        // Fall back to the most robotic/neutral Kannada voice available, or just any non-female.
-                        preferred = voices.find(v => v.lang.startsWith('kn') && !isFemale(v))
-                                || voices.find(v => v.name.includes('Google') && !isFemale(v)) // At least a non-female Google voice
+                        // Force the English Indian male voice "Rishi" to read the Kannada text
+                        preferred = voices.find(v => v.name === 'Rishi')
+                                || voices.find(v => v.name.includes('Google') && !isFemale(v))
                                 || voices[0];
                 } else {
                         // Strictly prioritize Indian English accents based on the user's list
