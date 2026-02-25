@@ -133,13 +133,21 @@ class NavisApp {
                 utt.rate = 0.95;
                 utt.pitch = 1;
 
-                // Cross-platform voice selection: prioritize male voices
+                // Cross-platform voice selection: prioritize Indian Male voices, firmly exclude female voices
                 const voices = this.voices || window.speechSynthesis.getVoices();
-                const preferred = voices.find(v => v.name.includes('Google') && v.name.includes('Male') && v.lang.startsWith('en'))
-                        || voices.find(v => v.name.includes('Alex'))             // macOS US Male
-                        || voices.find(v => v.name.includes('Daniel'))           // macOS UK Male
-                        || voices.find(v => v.name.includes('David'))            // Windows US Male
-                        || voices.find(v => v.lang.startsWith('en'));
+
+                const isFemale = (v) => /Female|Samantha|Zira|Veena|Heera|Neerja|Victoria|Karen|Moira|Tessa|Luciana|Monica/i.test(v.name);
+
+                const preferred = voices.find(v => v.name.includes('Rishi'))                 // macOS Indian English Male
+                        || voices.find(v => v.name.includes('Ravi'))                         // Windows Indian English Male
+                        || voices.find(v => v.lang === 'en-IN' && !isFemale(v))              // Any Indian English non-female
+                        || voices.find(v => (v.name.includes('Google') && v.name.includes('Male') && v.lang.startsWith('en')))
+                        || voices.find(v => v.name.includes('Alex'))                         // macOS US Male
+                        || voices.find(v => v.name.includes('Daniel'))                       // macOS UK Male
+                        || voices.find(v => v.name.includes('David'))                        // Windows US Male
+                        || voices.find(v => v.lang.startsWith('en') && !isFemale(v))         // Any English non-female
+                        || voices[0];
+
                 if (preferred) utt.voice = preferred;
 
                 // Chrome bug workaround: long texts get cut off
