@@ -143,21 +143,29 @@ class NavisApp {
                 // Cross-platform voice selection: prioritize Indian Male voices, firmly exclude female voices
                 const voices = this.voices || window.speechSynthesis.getVoices();
 
-                const isFemale = (v) => /Female|Samantha|Zira|Veena|Heera|Neerja|Victoria|Karen|Moira|Tessa|Luciana|Monica/i.test(v.name);
+                // Female filter (catches many defaults)
+                const isFemale = (v) => /Female|Samantha|Zira|Veena|Heera|Neerja|Victoria|Karen|Moira|Tessa|Luciana|Monica|Lekha|Soumya|Flo|Grandma|Kathy/i.test(v.name);
                 const isHindi = /[\u0900-\u097F]/.test(clean);
                 const isKannada = /[\u0C80-\u0CFF]/.test(clean);
 
                 let preferred;
                 if (isHindi) {
-                        preferred = voices.find(v => v.lang.startsWith('hi') && !isFemale(v)) || voices.find(v => v.lang.startsWith('hi')) || voices[0];
+                        // For Hindi, specifically grab "Google हिन्दी" (which is male-sounding) or any non-female Hindi voice
+                        preferred = voices.find(v => v.name === 'Google हिन्दी')
+                                || voices.find(v => v.lang.startsWith('hi') && !isFemale(v))
+                                || voices[0];
                 } else if (isKannada) {
-                        preferred = voices.find(v => v.lang.startsWith('kn') && !isFemale(v)) || voices.find(v => v.lang.startsWith('kn')) || voices[0];
+                        // No default male Kannada voice found in the user's list (Soumya is female).
+                        // Fall back to the most robotic/neutral Kannada voice available, or just any non-female.
+                        preferred = voices.find(v => v.lang.startsWith('kn') && !isFemale(v))
+                                || voices.find(v => v.name.includes('Google') && !isFemale(v)) // At least a non-female Google voice
+                                || voices[0];
                 } else {
-                        // Strictly prioritize Indian English accents
-                        preferred = voices.find(v => v.lang === 'en-IN' && !isFemale(v) && v.name.includes('Google')) // Google Indian English
-                                || voices.find(v => v.lang === 'en-IN' && !isFemale(v) && !/Rishi|Ravi/i.test(v.name)) // Alternative Indian English
-                                || voices.find(v => v.lang === 'en-IN' && !isFemale(v)) // Fallback to Rishi/Ravi if it's the *only* Indian male option available
-                                || voices.find(v => v.lang.startsWith('en') && !isFemale(v) && v.name.includes('Google')) // Any Google Male English
+                        // Strictly prioritize Indian English accents based on the user's list
+                        preferred = voices.find(v => v.name === 'Rishi') // Rishi is the default Indian male on macOS from the user list
+                                || voices.find(v => v.name === 'Google UK English Male') // Very good crisp alternative male voice
+                                || voices.find(v => v.name === 'Daniel') // Solid British Male backup
+                                || voices.find(v => v.lang === 'en-IN' && !isFemale(v)) // Any other Indian English non-female
                                 || voices.find(v => v.lang.startsWith('en') && !isFemale(v)) // Any Male English
                                 || voices[0];
                 }
