@@ -150,23 +150,26 @@ class NavisApp {
 
                 let preferred;
                 if (isHindi) {
-                        // Force a male Hindi voice. If a specific male Hindi voice isn't available, force Rishi to read Hindi text.
+                        // Force a male Hindi voice across devices (Google, Microsoft Windows, or macOS Rishi fallback)
                         preferred = voices.find(v => v.name.includes('Google हिन्दी'))
-                                || voices.find(v => v.lang.startsWith('hi') && !isFemale(v) && v.name.includes('Male'))
-                                || voices.find(v => v.name === 'Rishi') // Fallback to Rishi for a male Indian accent if all Hindi voices are female
+                                || voices.find(v => v.name.includes('Microsoft Hemant')) // Windows Hindi Male
+                                || voices.find(v => v.name.includes('Rishi')) // macOS fallback if no Hindi male exists
+                                || voices.find(v => v.lang.startsWith('hi') && /Male|M/i.test(v.name))
                                 || voices[0];
                 } else if (isKannada) {
-                        // Force the English Indian male voice "Rishi" to read the Kannada text
-                        preferred = voices.find(v => v.name === 'Rishi')
-                                || voices.find(v => v.name.includes('Google') && !isFemale(v))
+                        // Force the native Kannada voice "Soumya"
+                        preferred = voices.find(v => v.name.includes('Soumya'))
+                                || voices.find(v => v.lang.startsWith('kn'))
                                 || voices[0];
                 } else {
-                        // Strictly prioritize Indian English accents based on the user's list
-                        preferred = voices.find(v => v.name === 'Rishi') // Rishi is the default Indian male on macOS from the user list
-                                || voices.find(v => v.name === 'Google UK English Male') // Very good crisp alternative male voice
-                                || voices.find(v => v.name === 'Daniel') // Solid British Male backup
-                                || voices.find(v => v.lang === 'en-IN' && !isFemale(v)) // Any other Indian English non-female
-                                || voices.find(v => v.lang.startsWith('en') && !isFemale(v)) // Any Male English
+                        // Strictly prioritize Indian English accents
+                        preferred = voices.find(v => v.name === 'Rishi') // macOS Indian Male
+                                || voices.find(v => v.name === 'Ravi') // Windows Indian Male
+                                || voices.find(v => v.name === 'Microsoft Ravi') // Windows Indian Male alt
+                                || voices.find(v => v.name === 'Google UK English Male') // Android/Chrome crisp male
+                                || voices.find(v => v.name === 'Daniel') // macOS British Male backup
+                                || voices.find(v => v.lang === 'en-IN' && !isFemale(v))
+                                || voices.find(v => v.lang.startsWith('en') && !isFemale(v))
                                 || voices[0];
                 }
 
