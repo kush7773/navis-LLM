@@ -138,14 +138,13 @@ class NavisApp {
 
                 const isFemale = (v) => /Female|Samantha|Zira|Veena|Heera|Neerja|Victoria|Karen|Moira|Tessa|Luciana|Monica/i.test(v.name);
 
-                const preferred = voices.find(v => v.name.includes('Rishi'))                 // macOS Indian English Male
-                        || voices.find(v => v.name.includes('Ravi'))                         // Windows Indian English Male
-                        || voices.find(v => v.lang === 'en-IN' && !isFemale(v))              // Any Indian English non-female
-                        || voices.find(v => (v.name.includes('Google') && v.name.includes('Male') && v.lang.startsWith('en')))
-                        || voices.find(v => v.name.includes('Alex'))                         // macOS US Male
+                const preferred = voices.find(v => v.lang === 'en-IN' && !isFemale(v) && !/Rishi|Ravi/i.test(v.name) && v.name.includes('Google')) // Google Indian English (if available)
+                        || voices.find(v => v.lang === 'en-IN' && !isFemale(v) && !/Rishi|Ravi/i.test(v.name)) // Any other Indian English non-female
+                        || voices.find(v => v.name.includes('Google') && v.name.includes('UK English Male')) // UK English Male (often sounds good/similar)
                         || voices.find(v => v.name.includes('Daniel'))                       // macOS UK Male
-                        || voices.find(v => v.name.includes('David'))                        // Windows US Male
-                        || voices.find(v => v.lang.startsWith('en') && !isFemale(v))         // Any English non-female
+                        || voices.find(v => (v.name.includes('Google') && v.name.includes('Male') && v.lang.startsWith('en')))
+                        || voices.find(v => v.lang.startsWith('en-GB') && !isFemale(v)) // Any British English non-female
+                        || voices.find(v => v.lang.startsWith('en') && !isFemale(v) && !/Rishi|Ravi/i.test(v.name))         // Any English non-female
                         || voices[0];
 
                 if (preferred) utt.voice = preferred;
