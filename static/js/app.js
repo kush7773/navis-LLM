@@ -151,7 +151,7 @@ class NavisApp {
                 let preferred;
                 if (isHindi) {
                         // Force a male Hindi voice. If a specific male Hindi voice isn't available, force Rishi to read Hindi text.
-                        preferred = voices.find(v => v.name === 'Google हिन्दी')
+                        preferred = voices.find(v => v.name.includes('Google हिन्दी'))
                                 || voices.find(v => v.lang.startsWith('hi') && !isFemale(v) && v.name.includes('Male'))
                                 || voices.find(v => v.name === 'Rishi') // Fallback to Rishi for a male Indian accent if all Hindi voices are female
                                 || voices[0];
