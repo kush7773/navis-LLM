@@ -170,7 +170,11 @@ class NavisApp {
                                 || voices[0];
                 }
 
-                if (preferred) utt.voice = preferred;
+                if (preferred) {
+                        utt.voice = preferred;
+                        // CRITICAL FIX: If we want an English voice (like Rishi) to read Kannada, or prevent Chrome from overriding "Google हिन्दी" with a default Mac Hindi voice, we MUST set the utterance language to match the voice's exact language tag. 
+                        utt.lang = preferred.lang;
+                }
 
                 // Chrome bug workaround: long texts get cut off
                 if (clean.length > 200) {
