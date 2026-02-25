@@ -153,13 +153,12 @@ class NavisApp {
                 } else if (isKannada) {
                         preferred = voices.find(v => v.lang.startsWith('kn') && !isFemale(v)) || voices.find(v => v.lang.startsWith('kn')) || voices[0];
                 } else {
-                        preferred = voices.find(v => v.lang === 'en-IN' && !isFemale(v) && !/Rishi|Ravi/i.test(v.name) && v.name.includes('Google')) // Google Indian English (if available)
-                                || voices.find(v => v.lang === 'en-IN' && !isFemale(v) && !/Rishi|Ravi/i.test(v.name)) // Any other Indian English non-female
-                                || voices.find(v => v.name.includes('Google') && v.name.includes('UK English Male')) // UK English Male (often sounds good/similar)
-                                || voices.find(v => v.name.includes('Daniel'))                       // macOS UK Male
-                                || voices.find(v => (v.name.includes('Google') && v.name.includes('Male') && v.lang.startsWith('en')))
-                                || voices.find(v => v.lang.startsWith('en-GB') && !isFemale(v)) // Any British English non-female
-                                || voices.find(v => v.lang.startsWith('en') && !isFemale(v) && !/Rishi|Ravi/i.test(v.name))         // Any English non-female
+                        // Strictly prioritize Indian English accents
+                        preferred = voices.find(v => v.lang === 'en-IN' && !isFemale(v) && v.name.includes('Google')) // Google Indian English
+                                || voices.find(v => v.lang === 'en-IN' && !isFemale(v) && !/Rishi|Ravi/i.test(v.name)) // Alternative Indian English
+                                || voices.find(v => v.lang === 'en-IN' && !isFemale(v)) // Fallback to Rishi/Ravi if it's the *only* Indian male option available
+                                || voices.find(v => v.lang.startsWith('en') && !isFemale(v) && v.name.includes('Google')) // Any Google Male English
+                                || voices.find(v => v.lang.startsWith('en') && !isFemale(v)) // Any Male English
                                 || voices[0];
                 }
 
