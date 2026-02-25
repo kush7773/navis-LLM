@@ -69,7 +69,14 @@ class NavisApp {
                 this.recognition = new SR();
                 this.recognition.continuous = false;
                 this.recognition.interimResults = true;
-                this.recognition.lang = 'en-US';
+                const langSelect = document.getElementById('langSelect');
+                this.recognition.lang = langSelect ? langSelect.value : 'en-IN';
+
+                if (langSelect) {
+                        langSelect.addEventListener('change', (e) => {
+                                if (this.recognition) this.recognition.lang = e.target.value;
+                        });
+                }
 
                 this.recognition.onresult = (e) => {
                         const transcript = Array.from(e.results)
@@ -137,15 +144,24 @@ class NavisApp {
                 const voices = this.voices || window.speechSynthesis.getVoices();
 
                 const isFemale = (v) => /Female|Samantha|Zira|Veena|Heera|Neerja|Victoria|Karen|Moira|Tessa|Luciana|Monica/i.test(v.name);
+                const isHindi = /[\u0900-\u097F]/.test(clean);
+                const isKannada = /[\u0C80-\u0CFF]/.test(clean);
 
-                const preferred = voices.find(v => v.lang === 'en-IN' && !isFemale(v) && !/Rishi|Ravi/i.test(v.name) && v.name.includes('Google')) // Google Indian English (if available)
-                        || voices.find(v => v.lang === 'en-IN' && !isFemale(v) && !/Rishi|Ravi/i.test(v.name)) // Any other Indian English non-female
-                        || voices.find(v => v.name.includes('Google') && v.name.includes('UK English Male')) // UK English Male (often sounds good/similar)
-                        || voices.find(v => v.name.includes('Daniel'))                       // macOS UK Male
-                        || voices.find(v => (v.name.includes('Google') && v.name.includes('Male') && v.lang.startsWith('en')))
-                        || voices.find(v => v.lang.startsWith('en-GB') && !isFemale(v)) // Any British English non-female
-                        || voices.find(v => v.lang.startsWith('en') && !isFemale(v) && !/Rishi|Ravi/i.test(v.name))         // Any English non-female
-                        || voices[0];
+                let preferred;
+                if (isHindi) {
+                        preferred = voices.find(v => v.lang.startsWith('hi') && !isFemale(v)) || voices.find(v => v.lang.startsWith('hi')) || voices[0];
+                } else if (isKannada) {
+                        preferred = voices.find(v => v.lang.startsWith('kn') && !isFemale(v)) || voices.find(v => v.lang.startsWith('kn')) || voices[0];
+                } else {
+                        preferred = voices.find(v => v.lang === 'en-IN' && !isFemale(v) && !/Rishi|Ravi/i.test(v.name) && v.name.includes('Google')) // Google Indian English (if available)
+                                || voices.find(v => v.lang === 'en-IN' && !isFemale(v) && !/Rishi|Ravi/i.test(v.name)) // Any other Indian English non-female
+                                || voices.find(v => v.name.includes('Google') && v.name.includes('UK English Male')) // UK English Male (often sounds good/similar)
+                                || voices.find(v => v.name.includes('Daniel'))                       // macOS UK Male
+                                || voices.find(v => (v.name.includes('Google') && v.name.includes('Male') && v.lang.startsWith('en')))
+                                || voices.find(v => v.lang.startsWith('en-GB') && !isFemale(v)) // Any British English non-female
+                                || voices.find(v => v.lang.startsWith('en') && !isFemale(v) && !/Rishi|Ravi/i.test(v.name))         // Any English non-female
+                                || voices[0];
+                }
 
                 if (preferred) utt.voice = preferred;
 

@@ -1140,3 +1140,19 @@ body {
         /* Prevents iOS zoom on focus */
     }
 }
+.lang-select {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    margin-right: 8px;
+    appearance: none;
+}
+.lang-select option {
+    background: var(--bg-surface);
+    color: var(--text-main);
+}
+
