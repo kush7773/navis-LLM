@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <button onclick="testHindi()">Test Hindi (Google हिन्दी)</button>
+    <div id="log" style="white-space: pre-wrap; font-family: monospace;"></div>
+
+    <script>
+        let voices = [];
+        window.speechSynthesis.onvoiceschanged = () => {
+            voices = window.speechSynthesis.getVoices();
+            document.getElementById('log').innerText += "Voices loaded: " + voices.length + "\n";
+        };
+
+        function testHindi() {
+            const isFemale = (v) => /Female|Samantha|Zira|Veena|Heera|Neerja|Victoria|Karen|Moira|Tessa|Luciana|Monica|Lekha|Soumya|Flo|Grandma|Kathy/i.test(v.name);
+            
+            let preferred = voices.find(v => v.name.includes('Google हिन्दी'))
+                                || voices.find(v => v.name.includes('Microsoft Hemant')) 
+                                || voices.find(v => v.name.includes('Rishi')) 
+                                || voices.find(v => v.lang.startsWith('hi') && /Male|M/i.test(v.name))
+                                || voices[0];
+            
+            document.getElementById('log').innerText += "Selected Voice Name: " + preferred.name + "\n";
+            document.getElementById('log').innerText += "Selected Voice Lang: " + preferred.lang + "\n";
+            document.getElementById('log').innerText += "Is Lekha? " + preferred.name.includes('Lekha') + "\n";
+
+            const utt = new SpeechSynthesisUtterance("नमस्ते, क्या मैं अब एक पुरुष हूँ?");
+            utt.voice = preferred;
+            utt.lang = preferred.lang;
+            window.speechSynthesis.speak(utt);
+        }
+    </script>
+</body>
+</html>

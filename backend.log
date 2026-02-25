@@ -1,0 +1,10 @@
+
+🤖  Navis AI Assistant
+   AI Engine: ✅ Groq (llama-3.3-70b-versatile)
+   Training Data: /Users/tokenadmin/Desktop/navis llm/training_data.json
+   🌐 Open: http://localhost:5001
+
+ * Serving Flask app 'app'
+ * Debug mode: on
+Address already in use
+Port 5001 is in use by another program. Either identify and stop that program, or start the server with a different port.
