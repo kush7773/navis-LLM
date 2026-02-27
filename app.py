@@ -27,7 +27,7 @@ Your personality:
 About you:
 - Name: Navis
 - Created by: Rahul and the Robo Manthan team
-- Capabilities: Text & voice Q&A. You understand English, Hindi, and Kannada. CRITICAL: If you respond in Hindi or Kannada, you MUST write the response in Latin script (Hinglish / Kanglish) ONLY. NEVER use Devanagari or Kannada script. The text-to-speech engine requires English characters to use the male voice.
+- Capabilities: Text & voice Q&A. You understand English, Hindi, and Kannada.
 
 About Robo Manthan (Robomanthan Pvt. Ltd.):
 - An Indian robotech company specializing in robotics, AI, machine learning, and embedded product development
@@ -50,6 +50,13 @@ IMPORTANT: Robo Manthan is a COMPANY, BNMIT is a COLLEGE. They are tied up throu
 
 Keep responses concise but thorough. Use markdown formatting when helpful. Your answers will be spoken aloud, so keep them conversational."""
 
+# Language-specific instructions injected into the conversation
+LANG_INSTRUCTIONS = {
+    'hi-IN': '[RESPOND IN HINDI using Devanagari script (हिन्दी). Keep it conversational and natural.]',
+    'kn-IN': '[RESPOND IN KANNADA using Kannada script (ಕನ್ನಡ). Keep it conversational and natural.]',
+    'en-IN': '',  # Default English, no extra instruction needed
+}
+
 # ── Groq Init ─────────────────────────────────────────────────
 client = None
 conversation_history = []
@@ -62,13 +69,17 @@ def init_groq():
         return True
     return False
 
-def chat_with_groq(message):
+def chat_with_groq(message, lang='en-IN'):
     """Send a message using Groq and maintain conversation history."""
     global conversation_history
 
+    # Prepend language instruction if not English
+    lang_instruction = LANG_INSTRUCTIONS.get(lang, '')
+    full_message = f"{lang_instruction}\n{message}" if lang_instruction else message
+
     conversation_history.append({
         "role": "user",
-        "content": message
+        "content": full_message
     })
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT}] + conversation_history
@@ -144,26 +155,28 @@ def health():
 def chat():
     data = request.json
     message = data.get('message', '').strip()
+    lang = data.get('lang', 'en-IN')  # Language hint from the frontend dropdown
     if not message:
         return jsonify({'error': 'Empty message'}), 400
 
     # 1) Check personal training data first
     trained_answer = find_matching_qa(message)
     if trained_answer:
-        return jsonify({'response': trained_answer, 'source': 'trained'})
+        return jsonify({'response': trained_answer, 'source': 'trained', 'lang': lang})
 
     # 2) Fall back to Groq AI
     if not client:
         return jsonify({
             'response': "I'm not fully configured yet. Please add your GROQ_API_KEY to a `.env` file and restart the server.",
-            'source': 'error'
+            'source': 'error',
+            'lang': lang
         })
 
     try:
-        response_text = chat_with_groq(message)
-        return jsonify({'response': response_text, 'source': 'ai'})
+        response_text = chat_with_groq(message, lang)
+        return jsonify({'response': response_text, 'source': 'ai', 'lang': lang})
     except Exception as e:
-        return jsonify({'response': f"Sorry, I encountered an error: {str(e)}", 'source': 'error'})
+        return jsonify({'response': f"Sorry, I encountered an error: {str(e)}", 'source': 'error', 'lang': lang})
 
 @app.route('/api/train', methods=['POST'])
 def train():
@@ -208,8 +221,23 @@ except Exception as e:
 if __name__ == '__main__':
     groq_ok = client is not None
     port = int(os.environ.get('PORT', 5001))
+
+    # Check for SSL certs (required for microphone access on mobile browsers)
+    cert_file = os.path.join(BASE_DIR, 'cert.pem')
+    key_file = os.path.join(BASE_DIR, 'key.pem')
+    use_ssl = os.path.exists(cert_file) and os.path.exists(key_file)
+
+    protocol = 'https' if use_ssl else 'http'
     print("\n🤖  Navis AI Assistant")
     print(f"   AI Engine: {'✅ Groq (' + MODEL + ')' if groq_ok else '❌ No key — set GROQ_API_KEY in .env'}")
     print(f"   Training Data: {TRAINING_DATA_FILE}")
-    print(f"   🌐 Open: http://localhost:{port}\n")
-    app.run(debug=True, host='0.0.0.0', port=port)
+    if use_ssl:
+        print(f"   🔒 HTTPS: Enabled (microphone will work on mobile)")
+    else:
+        print(f"   ⚠️  No SSL certs — run with HTTPS for mobile mic access")
+    print(f"   🌐 Open: {protocol}://localhost:{port}\n")
+
+    if use_ssl:
+        app.run(debug=True, host='0.0.0.0', port=port, ssl_context=(cert_file, key_file))
+    else:
+        app.run(debug=True, host='0.0.0.0', port=port)

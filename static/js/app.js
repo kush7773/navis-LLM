@@ -112,7 +112,28 @@ class NavisApp {
         }
 
         /* ── Text-to-Speech (always on, cross-platform) ────── */
-        speak(text) {
+        /**
+         * Get the current language selection from the dropdown.
+         */
+        getSelectedLang() {
+                const langSelect = document.getElementById('langSelect');
+                return langSelect ? langSelect.value : 'en-IN';
+        }
+
+        /**
+         * Detect language from text content as a fallback.
+         * Checks for Devanagari script, Kannada script, and common Hindi transliterated words.
+         */
+        detectLanguage(text) {
+                if (/[\u0900-\u097F]/.test(text)) return 'hi-IN';
+                if (/[\u0C80-\u0CFF]/.test(text)) return 'kn-IN';
+                // Common Hindi/Hinglish words (Latin script) — catches LLM responses in Hinglish
+                const hindiWords = /\b(hai|hain|ka|ki|ke|kya|nahi|nahin|aur|mein|yeh|woh|toh|bhi|kaise|kab|kaha|kyun|aap|hum|tum|ji|tha|thi|the|ho|hota|hoti|karo|karte|karna|accha|bahut|baat|bol|dekho|suno|matlab|zaroor|namaste|dhanyavaad|shukriya|kaam|aise|waise|lekin|par|abhi|sabhi)\b/i;
+                if (hindiWords.test(text)) return 'hi-IN';
+                return 'en-IN';
+        }
+
+        speak(text, langHint) {
                 if (!this.ttsEnabled || !window.speechSynthesis) {
                         this.onSpeechDone();
                         return;
@@ -140,48 +161,54 @@ class NavisApp {
                 utt.rate = 0.95;
                 utt.pitch = 1;
 
-                // Cross-platform voice selection: prioritize Indian Male voices, firmly exclude female voices
+                // Determine language: use backend hint > text detection (now works with native script) > dropdown
+                const detectedLang = this.detectLanguage(clean);
+                const lang = langHint || detectedLang || this.getSelectedLang();
+                const isHindi = lang.startsWith('hi');
+                const isKannada = lang.startsWith('kn');
+
+                // Cross-platform voice selection
                 const voices = this.voices || window.speechSynthesis.getVoices();
 
                 // Female filter (catches many defaults)
-                const isFemale = (v) => /Female|Samantha|Zira|Veena|Heera|Neerja|Victoria|Karen|Moira|Tessa|Luciana|Monica|Lekha|Soumya|Flo|Grandma|Kathy/i.test(v.name);
-                const isHindi = /[\u0900-\u097F]/.test(clean);
-                const isKannada = /[\u0C80-\u0CFF]/.test(clean);
+                const isFemale = (v) => /Female|Samantha|Zira|Veena|Heera|Neerja|Victoria|Karen|Moira|Tessa|Luciana|Monica|Lekha|Flo|Grandma|Kathy/i.test(v.name);
 
                 let preferred;
                 if (isHindi) {
-                        // Force a male Hindi voice across devices (Google, Microsoft Windows, or macOS Rishi fallback)
+                        // Hindi voice: works even when text is in Latin script (Hinglish)
                         preferred = voices.find(v => v.name.includes('Google हिन्दी'))
-                                || voices.find(v => v.name.includes('Microsoft Hemant')) // Windows Hindi Male
-                                || voices.find(v => v.name.includes('Rishi')) // macOS fallback if no Hindi male exists
-                                || voices.find(v => v.lang.startsWith('hi') && /Male|M/i.test(v.name))
+                                || voices.find(v => v.name.includes('Microsoft Hemant'))
+                                || voices.find(v => v.lang.startsWith('hi') && !isFemale(v))
+                                || voices.find(v => v.lang.startsWith('hi'))
+                                || voices.find(v => v.name.includes('Rishi'))
                                 || voices[0];
+                        // For Hindi, explicitly set lang so the synthesis engine handles Hindi phonetics
+                        utt.lang = 'hi-IN';
                 } else if (isKannada) {
-                        // Force the native Kannada voice "Soumya"
                         preferred = voices.find(v => v.name.includes('Soumya'))
                                 || voices.find(v => v.lang.startsWith('kn'))
                                 || voices[0];
+                        utt.lang = 'kn-IN';
                 } else {
                         // Strictly prioritize Indian English accents
-                        preferred = voices.find(v => v.name === 'Rishi') // macOS Indian Male
-                                || voices.find(v => v.name === 'Ravi') // Windows Indian Male
-                                || voices.find(v => v.name === 'Microsoft Ravi') // Windows Indian Male alt
-                                || voices.find(v => v.name === 'Google UK English Male') // Android/Chrome crisp male
-                                || voices.find(v => v.name === 'Daniel') // macOS British Male backup
+                        preferred = voices.find(v => v.name === 'Rishi')
+                                || voices.find(v => v.name === 'Ravi')
+                                || voices.find(v => v.name === 'Microsoft Ravi')
+                                || voices.find(v => v.name === 'Google UK English Male')
+                                || voices.find(v => v.name === 'Daniel')
                                 || voices.find(v => v.lang === 'en-IN' && !isFemale(v))
                                 || voices.find(v => v.lang.startsWith('en') && !isFemale(v))
                                 || voices[0];
+                        utt.lang = 'en-IN';
                 }
 
                 if (preferred) {
                         utt.voice = preferred;
-                        // CRITICAL FIX: If we want an English voice (like Rishi) to read Kannada, or prevent Chrome from overriding "Google हिन्दी" with a default Mac Hindi voice, we MUST set the utterance language to match the voice's exact language tag. 
-                        utt.lang = preferred.lang;
                 }
 
                 // Chrome bug workaround: long texts get cut off
                 if (clean.length > 200) {
-                        this.speakChunked(clean, utt.rate, utt.pitch, preferred);
+                        this.speakChunked(clean, utt.rate, utt.pitch, preferred, utt.lang);
                 } else {
                         utt.onend = () => this.onSpeechDone();
                         utt.onerror = () => this.onSpeechDone();
@@ -189,7 +216,7 @@ class NavisApp {
                 }
         }
 
-        speakChunked(text, rate, pitch, voice) {
+        speakChunked(text, rate, pitch, voice, lang) {
                 const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
                 let i = 0;
                 const speakNext = () => {
@@ -198,6 +225,7 @@ class NavisApp {
                         utt.rate = rate;
                         utt.pitch = pitch;
                         if (voice) utt.voice = voice;
+                        if (lang) utt.lang = lang;
                         utt.onend = () => { i++; speakNext(); };
                         utt.onerror = () => { i++; speakNext(); };
                         window.speechSynthesis.speak(utt);
@@ -284,6 +312,9 @@ class NavisApp {
                         this.els.welcomeHero.style.display = 'none';
                 }
 
+                // Capture current language selection before sending
+                const selectedLang = this.getSelectedLang();
+
                 this.addMessage(text, 'user');
                 this.els.userInput.value = '';
                 this.autoResize();
@@ -302,7 +333,7 @@ class NavisApp {
                         const res = await fetch('/api/chat', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ message: text }),
+                                body: JSON.stringify({ message: text, lang: selectedLang }),
                                 signal: this.abortController.signal
                         });
                         const data = await res.json();
@@ -311,7 +342,8 @@ class NavisApp {
                         const sourceLabel = data.source === 'trained' ? '🎓 Trained' : data.source === 'ai' ? '✨ AI' : '';
                         this.addMessage(data.response, 'navis', sourceLabel);
                         this.isProcessing = false;
-                        this.speak(data.response);
+                        // Use language from backend response, fallback to dropdown selection
+                        this.speak(data.response, data.lang || selectedLang);
                 } catch (err) {
                         if (this.currentTypingEl) this.currentTypingEl.remove();
                         if (err.name !== 'AbortError') {

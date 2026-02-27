@@ -1050,13 +1050,49 @@ body {
 
 /* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 768px) {
+    :root {
+        --navbar-h: 56px;
+    }
+
+    html,
+    body {
+        height: 100dvh;
+        /* Dynamic viewport height — fixes mobile browser address bar */
+    }
+
     .app-container {
         max-width: 100%;
+        height: 100dvh;
+    }
+
+    /* Navbar compact */
+    .navbar {
+        padding: 0 12px;
+        height: var(--navbar-h);
+    }
+
+    .nav-brand {
+        gap: 8px;
+    }
+
+    .logo,
+    .logo-fallback.main {
+        width: 34px;
+        height: 34px;
     }
 
     .brand-name {
-        font-size: 1.1rem;
-        letter-spacing: 2px;
+        font-size: 1.05rem;
+        letter-spacing: 1.5px;
+    }
+
+    .brand-tagline {
+        font-size: 0.58rem;
+        letter-spacing: 1px;
+    }
+
+    .nav-actions {
+        gap: 6px;
     }
 
     .nav-btn .btn-text {
@@ -1065,45 +1101,294 @@ body {
 
     .nav-btn {
         padding: 8px 10px;
+        min-width: 40px;
+        justify-content: center;
+    }
+
+    /* Chat area */
+    .chat-container {
+        padding: 16px 10px 8px;
     }
 
     .message {
-        max-width: 90%;
+        max-width: 92%;
+        gap: 8px;
+        margin-bottom: 12px;
     }
 
-    .training-panel {
-        width: 100%;
-        right: -105%;
+    .message .avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 10px;
     }
 
+    .message .bubble {
+        padding: 10px 14px;
+        font-size: 0.88rem;
+        line-height: 1.55;
+        border-radius: 12px;
+    }
+
+    .message.navis .bubble {
+        border-top-left-radius: 3px;
+    }
+
+    .message.user .bubble {
+        border-top-right-radius: 3px;
+    }
+
+    .message .bubble pre {
+        padding: 10px;
+        font-size: 0.8rem;
+        border-radius: 6px;
+    }
+
+    .message .bubble code {
+        font-size: 0.82em;
+    }
+
+    .message .source-tag {
+        font-size: 0.62rem;
+    }
+
+    /* Welcome hero */
     .welcome-hero {
-        padding: 40px 16px 24px;
+        padding: 32px 16px 24px;
     }
 
-    .welcome-logo {
-        width: 70px;
-        height: 70px;
+    .welcome-logo,
+    .welcome-logo-fallback {
+        width: 68px;
+        height: 68px;
+        margin-bottom: 18px;
+    }
+
+    .welcome-logo-fallback {
+        font-size: 28px;
     }
 
     .welcome-title {
-        font-size: 1.3rem;
+        font-size: 1.25rem;
+        margin-bottom: 6px;
+    }
+
+    .welcome-sub {
+        font-size: 0.85rem;
+        margin-bottom: 20px;
+        max-width: 320px;
+    }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+        max-width: 340px;
     }
 
     .quick-btn {
         font-size: 0.78rem;
-        padding: 8px 14px;
+        padding: 10px 12px;
+        text-align: center;
+        border-radius: 20px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Input area */
+    .input-area {
+        padding: 10px 10px 12px;
+    }
+
+    .input-wrapper {
+        padding: 4px 4px 4px 12px;
+        border-radius: 12px;
+        gap: 6px;
+    }
+
+    .input-wrapper textarea {
+        font-size: 16px;
+        /* Prevents iOS zoom on focus */
+        padding: 8px 0;
+        min-height: 38px;
+    }
+
+    .input-actions {
+        gap: 4px;
     }
 
     .input-hint {
         display: none;
     }
+
+    /* Language selector mobile */
+    .lang-select {
+        font-size: 0.78rem;
+        padding: 4px 2px;
+        margin-right: 4px;
+        min-width: 32px;
+    }
+
+    /* Buttons */
+    .voice-btn,
+    .send-btn,
+    .stop-btn {
+        width: 42px;
+        height: 42px;
+        flex-shrink: 0;
+    }
+
+    .tts-toggle {
+        width: 32px;
+        height: 32px;
+    }
+
+    /* Training panel — full screen slide up */
+    .training-panel {
+        top: auto;
+        bottom: -100%;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 90dvh;
+        border-left: none;
+        border-top: 1px solid var(--surface-border);
+        border-radius: 20px 20px 0 0;
+        transition: bottom 0.4s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .training-panel.open {
+        right: 0;
+        bottom: 0;
+    }
+
+    .panel-header {
+        padding: 16px 18px;
+    }
+
+    .panel-header::before {
+        content: '';
+        display: block;
+        width: 36px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        margin: 0 auto 12px;
+    }
+
+    .panel-body {
+        padding: 16px 18px;
+    }
+
+    .panel-desc {
+        font-size: 0.8rem;
+    }
+
+    /* Toast above mobile keyboard */
+    .toast-container {
+        bottom: 120px;
+    }
+
+    .toast {
+        font-size: 0.82rem;
+        padding: 8px 16px;
+    }
+
+    /* Background glow — reduce for performance */
+    .glow-orb {
+        filter: blur(80px);
+        opacity: 0.08;
+    }
+
+    .orb-1 {
+        width: 300px;
+        height: 300px;
+    }
+
+    .orb-2 {
+        width: 200px;
+        height: 200px;
+    }
+
+    .orb-3 {
+        width: 180px;
+        height: 180px;
+    }
 }
 
+/* ── Extra small phones ───────────────────────────────────── */
 @media (max-width: 420px) {
 
     .secondary-logo,
     .logo-wrapper.secondary {
         display: none;
+    }
+
+    .brand-name {
+        font-size: 0.95rem;
+        letter-spacing: 1px;
+    }
+
+    .brand-tagline {
+        display: none;
+    }
+
+    .welcome-hero {
+        padding: 24px 12px 20px;
+    }
+
+    .welcome-title {
+        font-size: 1.1rem;
+    }
+
+    .welcome-sub {
+        font-size: 0.82rem;
+        max-width: 280px;
+    }
+
+    .quick-actions {
+        max-width: 300px;
+    }
+
+    .quick-btn {
+        font-size: 0.72rem;
+        padding: 8px 10px;
+    }
+
+    .message {
+        max-width: 95%;
+    }
+
+    .message .bubble {
+        padding: 9px 12px;
+        font-size: 0.85rem;
+    }
+
+    .chat-container {
+        padding: 12px 8px 6px;
+    }
+}
+
+/* ── Landscape phone ──────────────────────────────────────── */
+@media (max-height: 500px) and (orientation: landscape) {
+    .welcome-hero {
+        padding: 16px 20px 12px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .welcome-logo,
+    .welcome-logo-fallback {
+        width: 50px;
+        height: 50px;
+        margin-bottom: 0;
+    }
+
+    .quick-actions {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 100%;
     }
 }
 
@@ -1114,7 +1399,13 @@ body {
     }
 
     .input-area {
-        padding-bottom: calc(14px + env(safe-area-inset-bottom));
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+
+    @media (max-width: 768px) {
+        .training-panel {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
     }
 }
 
@@ -1122,7 +1413,8 @@ body {
 @media (hover: none) and (pointer: coarse) {
 
     .voice-btn,
-    .send-btn {
+    .send-btn,
+    .stop-btn {
         width: 44px;
         height: 44px;
     }
@@ -1132,27 +1424,54 @@ body {
     }
 
     .quick-btn {
-        padding: 12px 18px;
+        padding: 12px 16px;
+        -webkit-tap-highlight-color: transparent;
     }
 
     textarea {
         font-size: 16px !important;
         /* Prevents iOS zoom on focus */
     }
+
+    /* Disable hover effects on touch devices */
+    .quick-btn:hover,
+    .nav-btn:hover,
+    .voice-btn:hover,
+    .send-btn:hover {
+        transform: none;
+    }
+
+    .quick-btn:active {
+        transform: scale(0.97);
+        background: var(--surface-hover);
+        border-color: var(--accent);
+    }
 }
+
+/* ── Language Select (all sizes) ───────────────────────────── */
 .lang-select {
     background: transparent;
     border: none;
-    color: var(--text-muted);
-    font-size: 0.9rem;
+    color: var(--text-2);
+    font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
     outline: none;
-    margin-right: 8px;
+    margin-right: 6px;
     appearance: none;
-}
-.lang-select option {
-    background: var(--bg-surface);
-    color: var(--text-main);
+    -webkit-appearance: none;
+    padding: 4px 2px;
+    min-width: 30px;
+    text-align: center;
+    border-radius: 4px;
+    transition: color var(--transition);
 }
 
+.lang-select:focus {
+    color: var(--accent);
+}
+
+.lang-select option {
+    background: var(--bg-2);
+    color: var(--text);
+}

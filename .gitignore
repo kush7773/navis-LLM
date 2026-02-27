@@ -17,3 +17,6 @@ Thumbs.db
 # Gemini agent
 .gemini/
 .agent/
+
+# SSL certs (local dev only)
+*.pem
