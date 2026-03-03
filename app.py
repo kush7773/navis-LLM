@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request, jsonify
 from groq import Groq
-import json
 import os
 from difflib import SequenceMatcher
 from dotenv import load_dotenv
+from database import load_training_data, add_qa_pair, delete_qa_pair, init_storage
 
 load_dotenv()
 
@@ -11,8 +11,6 @@ app = Flask(__name__)
 
 # ── Configuration ──────────────────────────────────────────────
 GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TRAINING_DATA_FILE = os.path.join(BASE_DIR, 'training_data.json')
 SIMILARITY_THRESHOLD = 0.72
 MODEL = "llama-3.3-70b-versatile"  # Latest, most capable free model on Groq
 
@@ -104,15 +102,7 @@ def chat_with_groq(message, lang='en-IN'):
     return assistant_text
 
 # ── Training Data Helpers ──────────────────────────────────────
-def load_training_data():
-    if os.path.exists(TRAINING_DATA_FILE):
-        with open(TRAINING_DATA_FILE, 'r') as f:
-            return json.load(f)
-    return {"qa_pairs": []}
-
-def save_training_data(data):
-    with open(TRAINING_DATA_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
+# (load_training_data, add_qa_pair, delete_qa_pair imported from database.py)
 
 def find_matching_qa(question):
     """Find the best matching trained Q&A for a given question."""
@@ -186,10 +176,7 @@ def train():
     if not question or not answer:
         return jsonify({'error': 'Both question and answer are required'}), 400
 
-    training_data = load_training_data()
-    new_id = max((qa.get('id', 0) for qa in training_data['qa_pairs']), default=0) + 1
-    training_data['qa_pairs'].append({'question': question, 'answer': answer, 'id': new_id})
-    save_training_data(training_data)
+    new_id = add_qa_pair(question, answer)
     return jsonify({'success': True, 'id': new_id})
 
 @app.route('/api/training-data', methods=['GET'])
@@ -198,9 +185,7 @@ def get_training_data():
 
 @app.route('/api/training-data/<int:qa_id>', methods=['DELETE'])
 def delete_training_data(qa_id):
-    data = load_training_data()
-    data['qa_pairs'] = [qa for qa in data['qa_pairs'] if qa.get('id') != qa_id]
-    save_training_data(data)
+    delete_qa_pair(qa_id)
     return jsonify({'success': True})
 
 @app.route('/api/reset', methods=['POST'])
@@ -211,8 +196,7 @@ def reset_chat():
 
 # ── Initialize on import (works with both dev server and gunicorn) ──
 try:
-    if not os.path.exists(TRAINING_DATA_FILE):
-        save_training_data({"qa_pairs": []})
+    init_storage()
     init_groq()
 except Exception as e:
     print(f"⚠️  Init warning: {e}")
@@ -223,14 +207,17 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))
 
     # Check for SSL certs (required for microphone access on mobile browsers)
-    cert_file = os.path.join(BASE_DIR, 'cert.pem')
-    key_file = os.path.join(BASE_DIR, 'key.pem')
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    cert_file = os.path.join(base_dir, 'cert.pem')
+    key_file = os.path.join(base_dir, 'key.pem')
     use_ssl = os.path.exists(cert_file) and os.path.exists(key_file)
 
     protocol = 'https' if use_ssl else 'http'
+    from database import use_database
+    storage = 'PostgreSQL (Supabase)' if use_database() else 'Local JSON file'
     print("\n🤖  Navis AI Assistant")
     print(f"   AI Engine: {'✅ Groq (' + MODEL + ')' if groq_ok else '❌ No key — set GROQ_API_KEY in .env'}")
-    print(f"   Training Data: {TRAINING_DATA_FILE}")
+    print(f"   Storage: {storage}")
     if use_ssl:
         print(f"   🔒 HTTPS: Enabled (microphone will work on mobile)")
     else:
