@@ -204,7 +204,7 @@ except Exception as e:
 # ── Main ───────────────────────────────────────────────────────
 if __name__ == '__main__':
     groq_ok = client is not None
-    port = int(os.environ.get('PORT', 5001))
+    port = int(os.environ.get('PORT', 5002))
 
     # Check for SSL certs (required for microphone access on mobile browsers)
     base_dir = os.path.dirname(os.path.abspath(__file__))

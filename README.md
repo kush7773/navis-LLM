@@ -58,7 +58,7 @@ echo "GROQ_API_KEY=your_groq_api_key_here" > .env
 python app.py
 ```
 
-Open **http://localhost:5001** in your browser. That's it! 🎉
+Open **http://localhost:5002** in your browser. That's it! 🎉
 
 ---
 
@@ -121,7 +121,7 @@ navis-LLM/
 | Variable | Description | Required |
 |----------|------------|----------|
 | `GROQ_API_KEY` | Your Groq API key | ✅ Yes |
-| `PORT` | Server port (default: 5001) | ❌ No |
+| `PORT` | Server port (default: 5002) | ❌ No |
 
 ---
 
